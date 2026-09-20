@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nest Egg — Retirement Monte Carlo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div>
+      <h1>Nest Egg</h1>
+      <p class="sub">Retirement Monte Carlo simulator · everything in today's dollars</p>
+    </div>
+    <div class="top-actions">
+      <button id="btn-reroll" title="Resample with a new random seed">⟳ Re-roll</button>
+      <button id="btn-share" title="Copy a link with these inputs">Copy link</button>
+      <button id="btn-theme" title="Toggle light / dark">◐</button>
+    </div>
+  </header>
+
+  <div id="layout">
+    <aside id="inputs">
+      <fieldset>
+        <legend>You</legend>
+        <label>Current age <input data-key="currentAge" type="number" min="18" max="90" step="1"></label>
+        <label>Retire at <input data-key="retireAge" type="number" min="19" max="100" step="1"></label>
+        <label>Plan to age <input data-key="endAge" type="number" min="20" max="110" step="1"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Saving</legend>
+        <label>Current savings <span class="unit">$</span><input data-key="savings" type="number" min="0" step="1000"></label>
+        <label>Annual contribution <span class="unit">$/yr</span><input data-key="contribution" type="number" min="0" step="500"></label>
+        <label>Contribution growth <span class="unit">%/yr real</span><input data-key="contribGrowth" type="number" min="-10" max="20" step="0.5"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Retirement</legend>
+        <label>Annual spending <span class="unit">$/yr</span><input data-key="spending" type="number" min="0" step="1000"></label>
+        <label>Other income <span class="unit">$/yr</span><input data-key="otherIncome" type="number" min="0" step="1000"></label>
+        <label>…starting at age <input data-key="incomeStartAge" type="number" min="18" max="110" step="1"></label>
+        <label title="If the portfolio drops below this share of its value at retirement, cut spending">Cut spending by <span class="unit">%</span><input data-key="flexCut" type="number" min="0" max="80" step="5"></label>
+        <label>…when portfolio is below <span class="unit">% of start</span><input data-key="flexTrigger" type="number" min="10" max="100" step="5"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Portfolio</legend>
+        <label>Stocks while saving <span class="unit">%</span><input data-key="stockAccum" type="number" min="0" max="100" step="5"></label>
+        <label>Stocks in retirement <span class="unit">%</span><input data-key="stockRetire" type="number" min="0" max="100" step="5"></label>
+        <label>Fees <span class="unit">%/yr</span><input data-key="fees" type="number" min="0" max="5" step="0.05"></label>
+        <p class="hint">The remainder is in 10-year Treasuries.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Returns</legend>
+        <label>Model
+          <select data-key="model">
+            <option value="bootstrap">Bootstrap years (1928–2024)</option>
+            <option value="block">Block bootstrap (5-yr runs)</option>
+            <option value="historical">Every historical sequence</option>
+            <option value="normal">Normal (set your own)</option>
+          </select>
+        </label>
+        <label>Simulations
+          <select data-key="nSims">
+            <option value="2000">2,000</option>
+            <option value="5000">5,000</option>
+            <option value="10000">10,000</option>
+          </select>
+        </label>
+        <div id="normal-params" hidden>
+          <label>Stock real return <span class="unit">%</span><input data-key="stockMean" type="number" min="-10" max="20" step="0.5"></label>
+          <label>Stock volatility <span class="unit">%</span><input data-key="stockSD" type="number" min="0" max="60" step="1"></label>
+          <label>Bond real return <span class="unit">%</span><input data-key="bondMean" type="number" min="-10" max="20" step="0.5"></label>
+          <label>Bond volatility <span class="unit">%</span><input data-key="bondSD" type="number" min="0" max="40" step="1"></label>
+        </div>
+        <p class="hint" id="hist-note"></p>
+      </fieldset>
+
+      <div class="side-actions">
+        <button id="btn-pin" class="primary">Pin this scenario</button>
+        <button id="btn-reset">Reset inputs</button>
+      </div>
+    </aside>
+
+    <main id="results">
+      <section class="card hero-card">
+        <div class="hero">
+          <div class="hero-label">Chance your money lasts to age <span id="hero-age"></span></div>
+          <div class="hero-value" id="hero-success">—</div>
+          <div class="hero-note" id="hero-note"></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-label">Median at retirement</div><div class="kpi-value" id="kpi-retire">—</div><div class="kpi-sub" id="kpi-retire-sub"></div></div>
+          <div class="kpi"><div class="kpi-label">Median ending balance</div><div class="kpi-value" id="kpi-end">—</div><div class="kpi-sub" id="kpi-end-sub"></div></div>
+          <div class="kpi"><div class="kpi-label">Bad-case ending (10th pct)</div><div class="kpi-value" id="kpi-end10">—</div><div class="kpi-sub" id="kpi-end10-sub"></div></div>
+          <div class="kpi"><div class="kpi-label">Typical shortfall age</div><div class="kpi-value" id="kpi-fail">—</div><div class="kpi-sub" id="kpi-fail-sub"></div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Portfolio balance by age</h2>
+            <p class="card-sub">Shaded bands cover 10th–90th and 25th–75th percentiles of simulated paths. Today's dollars.</p>
+          </div>
+          <div class="card-tools">
+            <div id="fan-legend" class="legend"></div>
+            <button id="btn-scale" class="ghost" title="Switch the money axis between linear and log">Linear scale</button>
+            <button id="btn-table" class="ghost">Table</button>
+          </div>
+        </div>
+        <div id="fan" class="chart-box"></div>
+        <div id="fan-table" class="table-box" hidden></div>
+      </section>
+
+      <div class="two-col">
+        <section class="card">
+          <div class="card-head"><div><h2>When money runs out</h2><p class="card-sub">Share of simulations that deplete at each age.</p></div></div>
+          <div id="hist" class="chart-box"></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><div><h2>What moves the needle</h2><p class="card-sub">Success rate when each input is nudged down / up, everything else fixed.</p></div></div>
+          <div id="tornado" class="chart-box"><div class="empty">Computing…</div></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><div><h2>Scenarios</h2><p class="card-sub">Pin the current inputs to compare side by side. Pinned medians are drawn on the chart above.</p></div></div>
+        <div id="scenarios"></div>
+      </section>
+
+      <section class="card notes">
+        <h2>How this works</h2>
+        <ul>
+          <li><b>Real dollars.</b> Historical nominal returns (S&amp;P 500 with dividends, 10-year Treasuries) are deflated by that year's CPI, so every figure here is in today's purchasing power and you never enter an inflation guess.</li>
+          <li><b>Each year:</b> contribute (before retirement) or withdraw spending minus other income (after), then apply that year's portfolio return minus fees. A path fails when a withdrawal can't be covered.</li>
+          <li><b>Bootstrap</b> draws random historical years independently. <b>Block bootstrap</b> draws 5-year runs, preserving streaks like 1929–33 or 1995–99. <b>Every historical sequence</b> starts one path in each year 1928–2024 (wrapping), the classic "would this have survived history" test — it has only 97 paths, so the percentiles are coarse. <b>Normal</b> is a parametric model with the mean and volatility you choose.</li>
+          <li><b>Sensitivity</b> re-runs the full simulation with the same random draws and one input nudged, so differences are due to the input, not noise.</li>
+          <li>Not financial advice. Taxes, Social Security rules, healthcare shocks, and your actual fund choices are all outside this model.</li>
+        </ul>
+        <p class="src">Data: Aswath Damodaran (NYU Stern) annual returns 1928–2024; CPI-U annual averages from the Federal Reserve Bank of Minneapolis.</p>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="data.js"></script>
+<script src="sim.js"></script>
+<script src="charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
