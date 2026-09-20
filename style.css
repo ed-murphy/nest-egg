@@ -85,11 +85,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 #inputs { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 24px); overflow-y: auto; padding-right: 2px; }
 fieldset { border: 1px solid var(--border); background: var(--surface-1); border-radius: 12px; padding: 8px 12px 10px; margin: 0; }
 legend { font-weight: 600; font-size: 0.8rem; color: var(--text-secondary); padding: 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-fieldset label { display: grid; grid-template-columns: 1fr auto 96px; align-items: center; gap: 6px; padding: 4px 0; color: var(--text-primary); }
-fieldset label .unit { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
-fieldset label > input, fieldset label > select { grid-column: 3; }
-fieldset label > select { width: 100%; }
-fieldset label:has(select) { grid-template-columns: 1fr; }
+fieldset label { display: grid; grid-template-columns: 1fr 96px; align-items: center; column-gap: 8px; row-gap: 2px; padding: 6px 0; color: var(--text-primary); }
+fieldset label + label { border-top: 1px solid var(--border); }
+fieldset label .lbl { font-weight: 500; }
+fieldset label > small { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.76rem; line-height: 1.35; }
+fieldset label > select { grid-column: 1 / -1; width: 100%; margin-top: 2px; }
 input[type="number"], select {
   width: 100%; background: var(--surface-2); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px;
   padding: 5px 7px; font: inherit; font-variant-numeric: tabular-nums; text-align: right;
@@ -106,7 +106,6 @@ input.invalid { border-color: var(--div-down); }
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .card-sub { margin: 2px 0 0; color: var(--text-secondary); font-size: 0.85rem; }
 .card-tools { display: flex; align-items: center; gap: 12px; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 .hero-card { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 18px; align-items: center; }
 .hero-label { color: var(--text-secondary); }
@@ -137,8 +136,6 @@ input.invalid { border-color: var(--div-down); }
 .chart .dot-main { fill: var(--series-1); }
 .chart .bar { fill: var(--series-1); }
 .chart .bar.hover { fill-opacity: 0.75; }
-.chart .bar-up { fill: var(--div-up); }
-.chart .bar-down { fill: var(--div-down); }
 
 /* tooltip */
 .tip {
@@ -184,7 +181,6 @@ tr.retire td { font-weight: 600; }
 @media (max-width: 900px) {
   #layout { grid-template-columns: 1fr; }
   #inputs { position: static; max-height: none; overflow: visible; }
-  .two-col { grid-template-columns: 1fr; }
   .hero-card { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
@@ -192,5 +188,4 @@ tr.retire td { font-weight: 600; }
   .hero-value { font-size: 44px; }
   .kpis { grid-template-columns: 1fr 1fr; }
   fieldset label { grid-template-columns: 1fr 88px; }
-  fieldset label .unit { display: none; }
 }

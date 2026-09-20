@@ -9,25 +9,29 @@ const DEFAULTS = {
   spending: 70000, otherIncome: 24000, incomeStartAge: 67,
   flexCut: 0, flexTrigger: 80,
   stockAccum: 90, stockRetire: 60, fees: 0.2,
-  model: 'bootstrap', nSims: 5000,
+  model: 'bootstrap', nSims: 10000,
   stockMean: +(Sim.HIST_STATS.stock.mean * 100).toFixed(1), stockSD: +(Sim.HIST_STATS.stock.sd * 100).toFixed(1),
   bondMean: +(Sim.HIST_STATS.bond.mean * 100).toFixed(1), bondSD: +(Sim.HIST_STATS.bond.sd * 100).toFixed(1),
   seed: 42,
 };
-const NUMERIC = Object.keys(DEFAULTS).filter(k => typeof DEFAULTS[k] === 'number');
 const PIN_COLORS = ['--series-2', '--series-3'];
 
-const S = { p: { ...DEFAULTS }, res: null, pinned: [], timer: null, sensTimer: null, tableOpen: false, log: false };
+const S = { p: { ...DEFAULTS }, res: null, pinned: [], timer: null, tableOpen: false, log: false };
 
 // ---------------------------------------------------------------- inputs
 const fields = [...document.querySelectorAll('[data-key]')];
 function writeInputs() {
   for (const f of fields) { const k = f.dataset.key; f.value = S.p[k]; f.classList.remove('invalid'); }
   $('normal-params').hidden = S.p.model !== 'normal';
-  $('hist-note').textContent = S.p.model === 'normal'
-    ? 'Independent normal draws for stocks and bonds. Defaults match the historical real mean and volatility.'
-    : `Real returns ${Sim.HIST_STATS.from}–${Sim.HIST_STATS.to}: stocks ${(Sim.HIST_STATS.stock.mean * 100).toFixed(1)}% ± ${(Sim.HIST_STATS.stock.sd * 100).toFixed(1)}%, bonds ${(Sim.HIST_STATS.bond.mean * 100).toFixed(1)}% ± ${(Sim.HIST_STATS.bond.sd * 100).toFixed(1)}%.`;
+  $('hist-note').textContent = MODEL_NOTE[S.p.model];
 }
+const H = Sim.HIST_STATS;
+const MODEL_NOTE = {
+  bootstrap: `Each simulated year is a random real year from ${H.from}–${H.to}, so booms and crashes appear as often as they actually did. Recommended.`,
+  block: 'Draws random 5-year runs of consecutive real years, so streaks like 1929–33 or 1995–99 stay intact.',
+  historical: `One path per starting year ${H.from}–${H.to}: the classic "would this have survived history" test. Only ${H.years} paths, so percentiles are coarse.`,
+  normal: `Draws from a bell curve with the return and volatility below. Defaults match history after inflation: stocks ${(H.stock.mean * 100).toFixed(1)}% ± ${(H.stock.sd * 100).toFixed(1)}%, bonds ${(H.bond.mean * 100).toFixed(1)}% ± ${(H.bond.sd * 100).toFixed(1)}%.`,
+};
 function readInputs() {
   const p = { ...S.p };
   for (const f of fields) {
@@ -47,7 +51,7 @@ function sanitize(p) {
   p.stockAccum = clamp(p.stockAccum, 0, 100); p.stockRetire = clamp(p.stockRetire, 0, 100);
   p.fees = clamp(p.fees, 0, 5); p.flexCut = clamp(p.flexCut, 0, 80); p.flexTrigger = clamp(p.flexTrigger, 10, 100);
   p.stockSD = Math.max(0, p.stockSD); p.bondSD = Math.max(0, p.bondSD);
-  if (![2000, 5000, 10000].includes(p.nSims)) p.nSims = 5000;
+  p.nSims = 10000;
   if (!['bootstrap', 'block', 'historical', 'normal'].includes(p.model)) p.model = 'bootstrap';
   return p;
 }
@@ -56,6 +60,7 @@ fields.forEach(f => f.addEventListener('input', () => {
   // reflect any clamping back into the form without fighting the user's typing
   for (const g of fields) if (g !== f && g.tagName !== 'SELECT' && +g.value !== S.p[g.dataset.key]) g.value = S.p[g.dataset.key];
   $('normal-params').hidden = S.p.model !== 'normal';
+  $('hist-note').textContent = MODEL_NOTE[S.p.model];
   schedule();
 }));
 fields.forEach(f => f.addEventListener('change', () => { writeInputs(); }));
@@ -69,12 +74,6 @@ function runAll() {
   S.res = Sim.run(S.p);
   render();
   updateHash();
-  clearTimeout(S.sensTimer);
-  $('tornado').innerHTML = '<div class="empty">Computing…</div>';
-  S.sensTimer = setTimeout(() => {
-    const rows = Sim.sensitivity(S.p, S.res.success);
-    Charts.tornado($('tornado'), rows);
-  }, 30);
 }
 
 // --------------------------------------------------------------- render
@@ -82,7 +81,7 @@ function render() {
   const r = S.res, p = S.p;
   $('hero-age').textContent = p.endAge;
   $('hero-success').textContent = fmtPct(r.success);
-  const modelName = { bootstrap: 'bootstrapped historical years', block: '5-year historical blocks', historical: 'every historical start year', normal: 'normal draws' }[p.model];
+  const modelName = { bootstrap: 'random years from history', block: 'random 5-year stretches from history', historical: 'every start year since 1928', normal: 'bell-curve returns' }[p.model];
   $('hero-note').textContent = `${r.N.toLocaleString()} simulated lives · ${modelName}`;
 
   $('kpi-retire').textContent = fmtMoney(r.atRetire.p50);
@@ -232,7 +231,7 @@ function toast(msg) {
 }
 
 // re-render charts on resize (debounced)
-let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.res) { render(); Charts.tornado($('tornado'), Sim.sensitivity(S.p, S.res.success)); } }, 150); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.res) render(); }, 150); });
 
 // ----------------------------------------------------------------- boot
 readHash();

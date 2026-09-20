@@ -2,7 +2,7 @@
 
 A retirement Monte Carlo simulator that runs entirely in the browser. No build step, no accounts, no data leaves your machine — open `index.html`.
 
-Set your age, savings, contributions, retirement spending and allocation; it simulates thousands of possible lifetimes using real historical market returns and tells you the probability your money lasts, what the range of outcomes looks like, and which inputs actually move the needle.
+Set your age, savings, contributions, retirement spending and allocation; it simulates 10,000 possible lifetimes using real historical market returns and tells you the probability your money lasts, what the range of outcomes looks like, and which inputs actually move the needle.
 
 ## Run it
 
@@ -13,7 +13,6 @@ Open `index.html` directly, or serve the folder (`npx serve .`) and open the URL
 - **Fan chart** of portfolio balance by age: 10th–90th and 25th–75th percentile bands, median line, retirement marker, crosshair tooltip, linear/log toggle, and a table view.
 - **Hero + KPIs**: success probability, median balance at retirement, median and 10th-percentile ending balance, typical age money runs out.
 - **Depletion histogram**: at what age do the failing paths run dry.
-- **Sensitivity tornado**: success rate with each input nudged down/up (retirement age ±2 yrs, spending ±10%, contributions ±10%, savings ±10%, stock allocation ±20 pts, other income ±10%, plan-to age ±5, fees ±0.5 pts). Uses the same random draws as the base run so differences are signal, not noise.
 - **Scenarios**: pin up to two sets of inputs and compare them in a table; pinned medians overlay the fan chart.
 - **Shareable links**: inputs are encoded in the URL hash. Light/dark theme.
 
@@ -27,10 +26,10 @@ Return models:
 
 | Model | How years are drawn |
 |---|---|
-| Bootstrap | Each year is an independent random draw from 1928–2024 |
-| Block bootstrap | Random 5-year runs of consecutive history, preserving streaks (1929–33, 1973–74, 1995–99…) |
-| Every historical sequence | One path per start year 1928–2024, wrapping — the classic "would this have survived history" test (97 paths, so percentiles are coarse) |
-| Normal | Independent normal draws with the mean/volatility you set; defaults match the historical real figures |
+| Random years from history | Each year is an independent random draw from 1928–2024 (10,000 paths) |
+| Random 5-year stretches | Random 5-year runs of consecutive history, preserving streaks (1929–33, 1973–74, 1995–99…) |
+| Replay every start year | One path per start year 1928–2024, wrapping — the classic "would this have survived history" test (97 paths, so percentiles are coarse) |
+| Bell curve | Independent normal draws with the mean/volatility you set; defaults match the historical real figures |
 
 Deterministic seeded RNG (`mulberry32`); **Re-roll** picks a new seed.
 
@@ -40,7 +39,7 @@ Deterministic seeded RNG (`mulberry32`); **Re-roll** picks a new seed.
 
 ## Files
 
-- `sim.js` — the engine (`Sim.run`, `Sim.sensitivity`)
+- `sim.js` — the engine (`Sim.run`)
 - `charts.js` — SVG fan chart, histogram, tornado
 - `app.js` — inputs, state, scenarios, URL sharing, theme
 - `data.js` — historical returns

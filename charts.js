@@ -1,6 +1,6 @@
 'use strict';
 
-// Small SVG chart kit: fan chart, failure-age histogram, sensitivity tornado.
+// Small SVG chart kit: fan chart and failure-age histogram.
 // Colors come from CSS custom properties so light/dark swap in one place.
 const Charts = (() => {
   const NS = 'http://www.w3.org/2000/svg';
@@ -37,14 +37,6 @@ const Charts = (() => {
     const ticks = [];
     for (let v = 0; v <= max + step * 0.999; v += step) ticks.push(v);
     return ticks;
-  }
-  // Rounded on the data end only, square at the baseline. Horizontal bar from x0 (baseline) to x1.
-  function hBar(x0, x1, y, h, r) {
-    const dir = x1 >= x0 ? 1 : -1, w = Math.abs(x1 - x0);
-    r = Math.min(r, w, h / 2);
-    if (w < 0.5) return '';
-    const xe = x1, xr = x1 - dir * r;
-    return `M${x0},${y} H${xr} A${r},${r} 0 0 ${dir > 0 ? 1 : 0} ${xe},${y + r} V${y + h - r} A${r},${r} 0 0 ${dir > 0 ? 1 : 0} ${xr},${y + h} H${x0} Z`;
   }
   // Vertical column from baseline yb up to yt, rounded top.
   function vBar(x, w, yb, yt, r) {
@@ -235,50 +227,5 @@ const Charts = (() => {
     return svg;
   }
 
-  // -------------------------------------------------------------- tornado
-  // rows: [{label, lo, hi, base, delta, unit}] sorted by impact
-  function tornado(container, rows) {
-    container.querySelectorAll('svg, .empty').forEach(s => s.remove());
-    const W = Math.max(280, container.clientWidth || 500), rowH = 34, m = { t: 22, r: 56, b: 8, l: 150 };
-    const H = m.t + rows.length * rowH + m.b;
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': 'Sensitivity of success rate to each input' }, container);
-    const base = rows.length ? rows[0].base : 0.5;
-    let dev = 0.02;
-    for (const r of rows) dev = Math.max(dev, Math.abs(r.lo - base), Math.abs(r.hi - base));
-    dev = Math.min(dev * 1.1, Math.max(base, 1 - base));
-    const pw = W - m.l - m.r;
-    const sx = v => m.l + (v - (base - dev)) / (2 * dev) * pw;
-    const cx = sx(base);
-    text(svg, cx, 14, `Base ${fmtPct(base)}`, 'tick', { 'text-anchor': 'middle' });
-    el('line', { x1: cx, x2: cx, y1: m.t - 4, y2: H - m.b, class: 'axis' }, svg);
-    const tip = tooltip(container);
-    rows.forEach((r, i) => {
-      const y = m.t + i * rowH, bh = 12;
-      text(svg, m.l - 10, y + rowH / 2 + 4, r.label, 'label', { 'text-anchor': 'end' });
-      const sign = (r.unit === 'yr' || r.unit === 'pts') ? `±${r.delta} ${r.unit}` : `±${r.delta}%`;
-      text(svg, m.l - 10, y + rowH / 2 + 16, sign, 'tick', { 'text-anchor': 'end' });
-      const seg = (v, yy, tag) => {
-        const cls = v >= base ? 'bar-up' : 'bar-down';
-        const d = hBar(cx, sx(v), yy, bh, 4);
-        if (d) el('path', { d, class: cls }, svg);
-        const lx = v >= base ? sx(v) + 6 : sx(v) - 6;
-        text(svg, lx, yy + bh - 2, fmtPct(v), 'tick', { 'text-anchor': v >= base ? 'start' : 'end' });
-        const hitr = el('rect', { x: m.l, y: yy - 1, width: pw, height: bh + 2, fill: 'transparent' }, svg);
-        hitr.addEventListener('pointermove', e => {
-          const rr = svg.getBoundingClientRect();
-          const dpts = Math.round((v - base) * 100);
-          tip.show(tipRows(`${r.label} ${tag}`, [{ label: 'success rate', value: fmtPct(v) }, { label: 'vs base', value: `${dpts >= 0 ? '+' : ''}${dpts} pts` }]),
-            (e.clientX - rr.left), (e.clientY - rr.top));
-        });
-        hitr.addEventListener('pointerleave', () => tip.hide());
-      };
-      const lowerTag = (r.unit === 'yr' || r.unit === 'pts') ? `−${r.delta} ${r.unit}` : `−${r.delta}%`;
-      const upperTag = (r.unit === 'yr' || r.unit === 'pts') ? `+${r.delta} ${r.unit}` : `+${r.delta}%`;
-      seg(r.lo, y + 3, lowerTag);
-      seg(r.hi, y + 3 + bh + 2, upperTag);
-    });
-    return svg;
-  }
-
-  return { fan, failHist, tornado, fmtMoney, fmtPct };
+  return { fan, failHist, fmtMoney, fmtPct };
 })();

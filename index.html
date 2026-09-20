@@ -24,59 +24,68 @@
     <aside id="inputs">
       <fieldset>
         <legend>You</legend>
-        <label>Current age <input data-key="currentAge" type="number" min="18" max="90" step="1"></label>
-        <label>Retire at <input data-key="retireAge" type="number" min="19" max="100" step="1"></label>
-        <label>Plan to age <input data-key="endAge" type="number" min="20" max="110" step="1"></label>
+        <label><span class="lbl">Current age</span><input data-key="currentAge" type="number" min="18" max="90" step="1">
+          <small>How old you are today.</small></label>
+        <label><span class="lbl">Retire at</span><input data-key="retireAge" type="number" min="19" max="100" step="1">
+          <small>The age you stop contributing and start living off the portfolio.</small></label>
+        <label><span class="lbl">Plan to age</span><input data-key="endAge" type="number" min="20" max="110" step="1">
+          <small>How long the money needs to last; the simulation ends here.</small></label>
       </fieldset>
 
       <fieldset>
         <legend>Saving</legend>
-        <label>Current savings <span class="unit">$</span><input data-key="savings" type="number" min="0" step="1000"></label>
-        <label>Annual contribution <span class="unit">$/yr</span><input data-key="contribution" type="number" min="0" step="500"></label>
-        <label>Contribution growth <span class="unit">%/yr real</span><input data-key="contribGrowth" type="number" min="-10" max="20" step="0.5"></label>
+        <label><span class="lbl">Current savings ($)</span><input data-key="savings" type="number" min="0" step="1000">
+          <small>What you have invested today across all retirement accounts.</small></label>
+        <label><span class="lbl">Annual contribution ($/yr)</span><input data-key="contribution" type="number" min="0" step="500">
+          <small>How much you add each year until you retire, in today's dollars.</small></label>
+        <label><span class="lbl">Contribution raises (%/yr)</span><input data-key="contribGrowth" type="number" min="-10" max="20" step="0.5">
+          <small>How much that contribution grows each year beyond inflation, e.g. 1 if your raises tend to beat inflation by a point; 0 keeps it flat.</small></label>
       </fieldset>
 
       <fieldset>
         <legend>Retirement</legend>
-        <label>Annual spending <span class="unit">$/yr</span><input data-key="spending" type="number" min="0" step="1000"></label>
-        <label>Other income <span class="unit">$/yr</span><input data-key="otherIncome" type="number" min="0" step="1000"></label>
-        <label>…starting at age <input data-key="incomeStartAge" type="number" min="18" max="110" step="1"></label>
-        <label title="If the portfolio drops below this share of its value at retirement, cut spending">Cut spending by <span class="unit">%</span><input data-key="flexCut" type="number" min="0" max="80" step="5"></label>
-        <label>…when portfolio is below <span class="unit">% of start</span><input data-key="flexTrigger" type="number" min="10" max="100" step="5"></label>
+        <label><span class="lbl">Annual spending ($/yr)</span><input data-key="spending" type="number" min="0" step="1000">
+          <small>What you'll spend per year in retirement, in today's dollars, before counting any other income.</small></label>
+        <label><span class="lbl">Other income ($/yr)</span><input data-key="otherIncome" type="number" min="0" step="1000">
+          <small>Social Security, pension or rental income in retirement, in today's dollars; it reduces what the portfolio has to cover.</small></label>
+        <label><span class="lbl">Other income starts at age</span><input data-key="incomeStartAge" type="number" min="18" max="110" step="1">
+          <small>The age that income begins (Social Security is 62–70).</small></label>
+        <label><span class="lbl">Cut spending by (%)</span><input data-key="flexCut" type="number" min="0" max="80" step="5">
+          <small>Optional guardrail: if the portfolio falls too far, trim spending by this much until it recovers; 0 means never cut.</small></label>
+        <label><span class="lbl">Cut when portfolio is below (%)</span><input data-key="flexTrigger" type="number" min="10" max="100" step="5">
+          <small>The trigger for that cut, as a share of what the portfolio was worth the day you retired.</small></label>
       </fieldset>
 
       <fieldset>
         <legend>Portfolio</legend>
-        <label>Stocks while saving <span class="unit">%</span><input data-key="stockAccum" type="number" min="0" max="100" step="5"></label>
-        <label>Stocks in retirement <span class="unit">%</span><input data-key="stockRetire" type="number" min="0" max="100" step="5"></label>
-        <label>Fees <span class="unit">%/yr</span><input data-key="fees" type="number" min="0" max="5" step="0.05"></label>
-        <p class="hint">The remainder is in 10-year Treasuries.</p>
+        <label><span class="lbl">Stocks while saving (%)</span><input data-key="stockAccum" type="number" min="0" max="100" step="5">
+          <small>Share of the portfolio in stocks (S&amp;P 500) before retirement; the rest is in 10-year Treasuries.</small></label>
+        <label><span class="lbl">Stocks in retirement (%)</span><input data-key="stockRetire" type="number" min="0" max="100" step="5">
+          <small>Same split after retirement; most people shift toward bonds.</small></label>
+        <label><span class="lbl">Fees (%/yr)</span><input data-key="fees" type="number" min="0" max="5" step="0.05">
+          <small>Total yearly cost of your funds and any advisor: about 0.05 for a cheap index fund, around 1 for a typical advisor.</small></label>
       </fieldset>
 
       <fieldset>
-        <legend>Returns</legend>
-        <label>Model
+        <legend>Market returns</legend>
+        <label><span class="lbl">How returns are simulated</span>
           <select data-key="model">
-            <option value="bootstrap">Bootstrap years (1928–2024)</option>
-            <option value="block">Block bootstrap (5-yr runs)</option>
-            <option value="historical">Every historical sequence</option>
-            <option value="normal">Normal (set your own)</option>
+            <option value="bootstrap">Random years from history</option>
+            <option value="block">Random 5-year stretches from history</option>
+            <option value="historical">Replay every start year since 1928</option>
+            <option value="normal">Bell curve with my own numbers</option>
           </select>
-        </label>
-        <label>Simulations
-          <select data-key="nSims">
-            <option value="2000">2,000</option>
-            <option value="5000">5,000</option>
-            <option value="10000">10,000</option>
-          </select>
-        </label>
+          <small id="hist-note"></small></label>
         <div id="normal-params" hidden>
-          <label>Stock real return <span class="unit">%</span><input data-key="stockMean" type="number" min="-10" max="20" step="0.5"></label>
-          <label>Stock volatility <span class="unit">%</span><input data-key="stockSD" type="number" min="0" max="60" step="1"></label>
-          <label>Bond real return <span class="unit">%</span><input data-key="bondMean" type="number" min="-10" max="20" step="0.5"></label>
-          <label>Bond volatility <span class="unit">%</span><input data-key="bondSD" type="number" min="0" max="40" step="1"></label>
+          <label><span class="lbl">Stock return (%/yr)</span><input data-key="stockMean" type="number" min="-10" max="20" step="0.5">
+            <small>Average yearly stock return above inflation.</small></label>
+          <label><span class="lbl">Stock volatility (%)</span><input data-key="stockSD" type="number" min="0" max="60" step="1">
+            <small>How much stock returns swing from year to year (standard deviation).</small></label>
+          <label><span class="lbl">Bond return (%/yr)</span><input data-key="bondMean" type="number" min="-10" max="20" step="0.5">
+            <small>Average yearly bond return above inflation.</small></label>
+          <label><span class="lbl">Bond volatility (%)</span><input data-key="bondSD" type="number" min="0" max="40" step="1">
+            <small>How much bond returns swing from year to year.</small></label>
         </div>
-        <p class="hint" id="hist-note"></p>
       </fieldset>
 
       <div class="side-actions">
@@ -116,16 +125,10 @@
         <div id="fan-table" class="table-box" hidden></div>
       </section>
 
-      <div class="two-col">
-        <section class="card">
-          <div class="card-head"><div><h2>When money runs out</h2><p class="card-sub">Share of simulations that deplete at each age.</p></div></div>
-          <div id="hist" class="chart-box"></div>
-        </section>
-        <section class="card">
-          <div class="card-head"><div><h2>What moves the needle</h2><p class="card-sub">Success rate when each input is nudged down / up, everything else fixed.</p></div></div>
-          <div id="tornado" class="chart-box"><div class="empty">Computing…</div></div>
-        </section>
-      </div>
+      <section class="card">
+        <div class="card-head"><div><h2>When money runs out</h2><p class="card-sub">Of the simulated lives that fail, the age at which the portfolio hits zero.</p></div></div>
+        <div id="hist" class="chart-box"></div>
+      </section>
 
       <section class="card">
         <div class="card-head"><div><h2>Scenarios</h2><p class="card-sub">Pin the current inputs to compare side by side. Pinned medians are drawn on the chart above.</p></div></div>
@@ -137,8 +140,7 @@
         <ul>
           <li><b>Real dollars.</b> Historical nominal returns (S&amp;P 500 with dividends, 10-year Treasuries) are deflated by that year's CPI, so every figure here is in today's purchasing power and you never enter an inflation guess.</li>
           <li><b>Each year:</b> contribute (before retirement) or withdraw spending minus other income (after), then apply that year's portfolio return minus fees. A path fails when a withdrawal can't be covered.</li>
-          <li><b>Bootstrap</b> draws random historical years independently. <b>Block bootstrap</b> draws 5-year runs, preserving streaks like 1929–33 or 1995–99. <b>Every historical sequence</b> starts one path in each year 1928–2024 (wrapping), the classic "would this have survived history" test — it has only 97 paths, so the percentiles are coarse. <b>Normal</b> is a parametric model with the mean and volatility you choose.</li>
-          <li><b>Sensitivity</b> re-runs the full simulation with the same random draws and one input nudged, so differences are due to the input, not noise.</li>
+          <li><b>Random years</b> draws each simulated year independently from 1928–2024, so booms and crashes show up as often as they did in history. <b>Random 5-year stretches</b> keeps runs of consecutive years together, preserving streaks like 1929–33 or 1995–99. <b>Replay every start year</b> starts one path in each year 1928–2024 (wrapping), the classic "would this have survived history" test — only 97 paths, so its percentiles are coarse. <b>Bell curve</b> draws from a normal distribution with the return and volatility you choose.</li>
           <li>Not financial advice. Taxes, Social Security rules, healthcare shocks, and your actual fund choices are all outside this model.</li>
         </ul>
         <p class="src">Data: Aswath Damodaran (NYU Stern) annual returns 1928–2024; CPI-U annual averages from the Federal Reserve Bank of Minneapolis.</p>

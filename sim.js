@@ -6,8 +6,7 @@
 // inflation never has to be modelled separately.
 // ---------------------------------------------------------------------------
 const Sim = (() => {
-  // Deterministic PRNG so a given seed always produces the same paths (and so
-  // sensitivity runs use common random numbers).
+  // Deterministic PRNG so a given seed always produces the same paths.
   function mulberry32(seed) {
     let a = seed >>> 0;
     return function () {
@@ -135,24 +134,5 @@ const Sim = (() => {
     return res;
   }
 
-  // One-at-a-time sensitivity: success rate when each input is nudged down / up.
-  const SENS = [
-    { label: 'Retirement age', key: 'retireAge', delta: 2, unit: 'yr', apply: (p, d) => ({ ...p, retireAge: Math.min(p.endAge - 1, Math.max(p.currentAge + 1, p.retireAge + d)) }) },
-    { label: 'Retirement spending', key: 'spending', delta: 10, unit: '%', apply: (p, d) => ({ ...p, spending: p.spending * (1 + d / 100) }) },
-    { label: 'Annual contribution', key: 'contribution', delta: 10, unit: '%', apply: (p, d) => ({ ...p, contribution: p.contribution * (1 + d / 100) }) },
-    { label: 'Current savings', key: 'savings', delta: 10, unit: '%', apply: (p, d) => ({ ...p, savings: p.savings * (1 + d / 100) }) },
-    { label: 'Stocks in retirement', key: 'stockRetire', delta: 20, unit: 'pts', apply: (p, d) => ({ ...p, stockRetire: Math.min(100, Math.max(0, p.stockRetire + d)) }) },
-    { label: 'Other income', key: 'otherIncome', delta: 10, unit: '%', apply: (p, d) => ({ ...p, otherIncome: p.otherIncome * (1 + d / 100) }) },
-    { label: 'Plan-to age', key: 'endAge', delta: 5, unit: 'yr', apply: (p, d) => ({ ...p, endAge: Math.max(p.retireAge + 1, p.endAge + d) }) },
-    { label: 'Fees', key: 'fees', delta: 0.5, unit: 'pts', apply: (p, d) => ({ ...p, fees: Math.max(0, p.fees + d) }) },
-  ];
-  function sensitivity(p, base) {
-    return SENS.map(s => {
-      const lo = run(s.apply(p, -s.delta), { light: true }).success;
-      const hi = run(s.apply(p, +s.delta), { light: true }).success;
-      return { label: s.label, key: s.key, delta: s.delta, unit: s.unit, lo, hi, base };
-    }).sort((a, b) => Math.abs(b.hi - b.lo) - Math.abs(a.hi - a.lo));
-  }
-
-  return { run, sensitivity, HIST_STATS, REAL };
+  return { run, HIST_STATS, REAL };
 })();
